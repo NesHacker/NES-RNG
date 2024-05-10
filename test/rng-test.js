@@ -2,6 +2,32 @@
 
 var seed = 1
 
+/**
+ * Javascript implementation of the `d20` routine in the 6502 library.
+ */
+function d20 () {
+  let number = 0
+  do {
+    number = (galois16() & 0b00011111)
+  } while (number >= 20)
+  return number + 1
+}
+
+/**
+ * Javascript implementation of the `galios16_simple` implementation in the
+ * 6502 library.
+ */
+function galios16_simple() {
+  for (let x = 0; x < 8; x++) {
+    const lsb = seed & 1
+    seed >>= 1
+    if (lsb) {
+      seed ^= 0xB400
+    }
+  }
+  return seed & 0xFF
+}
+
 /*
 galois16:
   ldy #8
@@ -45,6 +71,7 @@ function formatHex8 (n) {
  */
 function testGalois16 () {
   console.log('Testing `galois16` implementation...')
+  seed = 1
   const expected = [
     '00 39 00 41 DD 79 1B A8 DB 23 F9 89 65 4E 73 9D',
     'E5 86 CA 29 8D 78 48 BD 79 7B 59 82 9B E7 16 F3'
@@ -97,6 +124,48 @@ function testRejectionSamplingD20 () {
   console.log('')
 }
 
-testGalois16()
-testModD20()
-testRejectionSamplingD20()
+function test_galios16_simple() {
+  console.log('Testing `galios16_simple`...')
+  seed = 1
+  const expected = [
+    '68 41 14 7B 6B 91 97 3B DC 53 CE 7F 3A 7C 52 3F',
+    '96 C6 D5 A1 94 B8 67 9C 11 44 B7 C7 91 00 A3 B8'
+  ].join(' ')
+  const bytes = Array(32).fill(0).map(galios16_simple).map(formatHex8).join(' ')
+  if (expected !== bytes) {
+    console.log('Failed! Bytes do not match...')
+    console.log('Expected:', expected)
+    console.log('Actual:  ', bytes)
+  } else {
+    console.log('Success! Output bytes match.')
+  }
+  console.log('')
+}
+
+function test_d20() {
+  console.log('Testing `d20`...')
+  seed = 1
+  const expected = [
+    '01 01 02 09 04 0A 06 0F 14 06 07 0B 0A 0E 09 03',
+    '08 14 08 06 13 04 09 08 12 0B 03 10 04 0E 03 12'
+  ].join(' ')
+  const bytes = Array(32).fill(0).map(d20).map(formatHex8).join(' ')
+  if (expected !== bytes) {
+    console.log('Failed! Bytes do not match...')
+    console.log('Expected:', expected)
+    console.log('Actual:  ', bytes)
+  } else {
+    console.log('Success! Output bytes match.')
+  }
+  console.log('')
+}
+
+function testSuite() {
+  testGalois16()
+  test_galios16_simple()
+  test_d20()
+  testModD20()
+  testRejectionSamplingD20()
+}
+
+testSuite()

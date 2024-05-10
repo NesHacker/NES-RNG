@@ -65,11 +65,50 @@ seed = $30 ; TODO Unsure if I like this method of defining the seed address.
 : sta PPU_DATA
   dex
   bne :-
+  ; Set random seed to known value
+  lda #1
+  sta seed
   jmp main
 .endproc
 
+.proc generate_test_bytes
+  ; Generate 32 bytes with the galios16o routine and write them to ram (for
+  ; testing the javascript testing implementation)
+  ldx #0
+: jsr galois16o
+  sta $0040, x
+  inx
+  cpx #32
+  bne :-
+  rts
+.endproc
+
+.proc generate_simple_bytes
+  ; Generate 32 bytes with the galios16_simple routine and write them to RAM.
+  ldx #0
+: jsr galois16_simple
+  sta $0040, x
+  inx
+  cpx #32
+  bne :-
+  rts
+.endproc
+
+.proc generate_d20_bytes
+  ldx #0
+: jsr d20
+  sta $0040, x
+  inx
+  cpx #32
+  bne :-
+  rts
+.endproc
+
 .proc main
-  jmp main
+  jsr generate_d20_bytes
+
+@forever:
+  jmp @forever
 .endproc
 
 .proc nmi
